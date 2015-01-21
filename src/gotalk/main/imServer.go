@@ -40,7 +40,8 @@ func (app AppConfig) findChan(uid int) chan Message {
 	return app.msgc
 }
 
-func addmsg(a Message, c chan Message) {
+func addmsg(a Message, sendToId int, funcChan func(id int) chan Message) {
+	c := funcChan(sendToId)
 	// todo this is a adapter sub
 	c <- a
 }
@@ -109,7 +110,7 @@ func sendMessage(app AppConfig, w http.ResponseWriter, r *http.Request) (int, er
 
 		// get the chan based on the sendToId
 		// add the msg to the channel
-		addmsg(msg, app.findChan(int(sendToId64)))
+		go addmsg(msg, int(sendToId64), app.findChan)
 
 		fmt.Fprintf(w, "message sent")
 		return http.StatusAccepted, nil
@@ -122,7 +123,7 @@ func sendMessage(app AppConfig, w http.ResponseWriter, r *http.Request) (int, er
 func login(app AppConfig, w http.ResponseWriter, r *http.Request) (int, error) {
 	fmt.Println("method:", r.Method) // get the http method
 	if r.Method == "GET" {
-		t, _ := template.ParseFiles("login.gtpl")
+		t, _ := template.ParseFiles("tmpl/login.gtpl")
 		t.Execute(w, nil)
 		return http.StatusAccepted, nil
 	} else {
