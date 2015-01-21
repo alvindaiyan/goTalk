@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -19,6 +20,10 @@ type User struct {
 	Token string
 }
 
+type AppConfig struct {
+	msgc chan Message
+}
+
 type Message struct {
 	content       string
 	userIdSend    int
@@ -26,11 +31,17 @@ type Message struct {
 }
 
 type AppHandler struct {
-	msgc chan Message
-	h    func(msgc chan Message, w http.ResponseWriter, r *http.Request) (int, error)
+	appConfig AppConfig
+	h         func(app AppConfig, w http.ResponseWriter, r *http.Request) (int, error)
+}
+
+func (app AppConfig) findChan(uid int) chan Message {
+	// todo this is a adapter sub
+	return app.msgc
 }
 
 func addmsg(a Message, c chan Message) {
+	// todo this is a adapter sub
 	c <- a
 }
 
@@ -39,7 +50,7 @@ func validateToken(token string) bool {
 }
 
 func (app AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	status, err := app.h(app.msgc, w, r)
+	status, err := app.h(app.appConfig, w, r)
 	if err != nil {
 		log.Printf("HTTP err", status, err)
 		switch status {
@@ -53,12 +64,12 @@ func (app AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func receiveMessage(msgc chan Message, w http.ResponseWriter, r *http.Request) (int, error) {
+func receiveMessage(app AppConfig, w http.ResponseWriter, r *http.Request) (int, error) {
 	fmt.Fprintf(w, "receive Message")
 	return http.StatusAccepted, nil
 }
 
-func sendMessage(msgc chan Message, w http.ResponseWriter, r *http.Request) (int, error) {
+func sendMessage(app AppConfig, w http.ResponseWriter, r *http.Request) (int, error) {
 	//get url param, for POST method, get the body
 	r.ParseForm()
 
@@ -82,7 +93,23 @@ func sendMessage(msgc chan Message, w http.ResponseWriter, r *http.Request) (int
 			fmt.Println("val:", strings.Join(v, ""))
 		}
 
-		// todo add the msg to the channel
+		// construct a new message
+		userId64, err := strconv.ParseInt(r.FormValue("id"), 0, 0)
+
+		if err != nil {
+			log.Println("parse user id err", err)
+		}
+
+		sendToId64, err := strconv.ParseInt(r.FormValue("sendToId"), 0, 0)
+		if err != nil {
+			log.Println("parse sendTo id err", err)
+		}
+
+		msg := Message{r.FormValue("content"), int(userId64), int(sendToId64)}
+
+		// get the chan based on the sendToId
+		// add the msg to the channel
+		addmsg(msg, app.findChan(int(sendToId64)))
 
 		fmt.Fprintf(w, "message sent")
 		return http.StatusAccepted, nil
@@ -92,7 +119,7 @@ func sendMessage(msgc chan Message, w http.ResponseWriter, r *http.Request) (int
 	}
 }
 
-func login(msgc chan Message, w http.ResponseWriter, r *http.Request) (int, error) {
+func login(app AppConfig, w http.ResponseWriter, r *http.Request) (int, error) {
 	fmt.Println("method:", r.Method) // get the http method
 	if r.Method == "GET" {
 		t, _ := template.ParseFiles("login.gtpl")
@@ -166,16 +193,17 @@ func serverSetup(port string) {
 	fmt.Println("setup send path (/send)")
 
 	msgc := make(chan Message)
+	appCofig := AppConfig{msgc}
 
-	http.HandleFunc("/send", AppHandler{msgc, sendMessage}.ServeHTTP)
+	http.HandleFunc("/send", AppHandler{appCofig, sendMessage}.ServeHTTP)
 
 	fmt.Println("setup receive path")
 
-	http.HandleFunc("/receive", AppHandler{msgc, receiveMessage}.ServeHTTP)
+	http.HandleFunc("/receive", AppHandler{appCofig, receiveMessage}.ServeHTTP)
 
 	fmt.Println("setup login path")
 
-	http.HandleFunc("/", AppHandler{msgc, login}.ServeHTTP)
+	http.HandleFunc("/", AppHandler{appCofig, login}.ServeHTTP)
 
 	// setup the lisenting port
 	err := http.ListenAndServe(":"+port, nil)
