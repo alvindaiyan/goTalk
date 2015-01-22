@@ -188,23 +188,20 @@ func tokenGenerator() (string, error) {
 	return rs, nil
 }
 
-func serverSetup(port string) {
+func serverSetup(appConfig AppConfig, port string) {
 	fmt.Println("start setup server:")
 
 	fmt.Println("setup send path (/send)")
 
-	msgc := make(chan Message)
-	appCofig := AppConfig{msgc}
-
-	http.HandleFunc("/send", AppHandler{appCofig, sendMessage}.ServeHTTP)
+	http.HandleFunc("/send", AppHandler{appConfig, sendMessage}.ServeHTTP)
 
 	fmt.Println("setup receive path")
 
-	http.HandleFunc("/receive", AppHandler{appCofig, receiveMessage}.ServeHTTP)
+	http.HandleFunc("/receive", AppHandler{appConfig, receiveMessage}.ServeHTTP)
 
 	fmt.Println("setup login path")
 
-	http.HandleFunc("/", AppHandler{appCofig, login}.ServeHTTP)
+	http.HandleFunc("/", AppHandler{appConfig, login}.ServeHTTP)
 
 	// setup the lisenting port
 	err := http.ListenAndServe(":"+port, nil)
@@ -216,5 +213,7 @@ func serverSetup(port string) {
 }
 
 func main() {
-	serverSetup("9000")
+	msgc := make(chan Message)
+	appConfig := AppConfig{msgc}
+	serverSetup(appConfig, "9000")
 }
