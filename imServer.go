@@ -20,14 +20,22 @@ type User struct {
 	Token string
 }
 
+const (
+	MAX_CHAN = 10000
+)
+
 type AppConfig struct {
 	msgc chan Message
 }
 
 type Message struct {
-	content       string
-	userIdSend    int
-	userIdReceive int
+	Content       string
+	UserIdSend    int
+	UserIdReceive int
+}
+
+type ErrMessage struct {
+	Err string
 }
 
 type AppHandler struct {
@@ -40,10 +48,13 @@ func (app AppConfig) findChan(uid int) chan Message {
 	return app.msgc
 }
 
-func addmsg(a Message, sendToId int, funcChan func(id int) chan Message) {
-	c := funcChan(sendToId)
+func addmsg(a Message, c chan Message) {
+	fmt.Println("===>msg len in go")
+
 	// todo this is a adapter sub
 	c <- a
+	fmt.Println("===>msg len in go", len(c))
+
 }
 
 func validateToken(token string) bool {
@@ -65,63 +76,118 @@ func (app AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+/*
+ * parameter needed:
+ * userid (receive user)
+ */
 func receiveMessage(app AppConfig, w http.ResponseWriter, r *http.Request) (int, error) {
-	fmt.Fprintf(w, "receive Message")
-	return http.StatusAccepted, nil
-}
-
-func sendMessage(app AppConfig, w http.ResponseWriter, r *http.Request) (int, error) {
-	//get url param, for POST method, get the body
-	r.ParseForm()
-
-	//print out the form info
-	if validateToken(strings.Join(r.Form["token"], "")) {
-		fmt.Println("user loged in: ", r.Form["username"])
-
-		// print the info to the server console
-		fmt.Println(r.Form)
-		fmt.Println("path", r.URL.Path)
-		fmt.Println("scheme", r.URL.Scheme)
-		fmt.Println(r.Form["url_long"])
-
-		fmt.Println("username:", r.Form["username"])
-		fmt.Println("user id:", r.Form["id"])
-		fmt.Println("userid sendTo:", r.Form["sendToId"])
-		fmt.Println("content:", r.Form["content"])
-
-		for k, v := range r.Form {
-			fmt.Println("key:", k)
-			fmt.Println("val:", strings.Join(v, ""))
-		}
-
-		// construct a new message
-		userId64, err := strconv.ParseInt(r.FormValue("id"), 0, 0)
-
-		if err != nil {
-			log.Println("parse user id err", err)
-		}
-
-		sendToId64, err := strconv.ParseInt(r.FormValue("sendToId"), 0, 0)
-		if err != nil {
-			log.Println("parse sendTo id err", err)
-		}
-
-		msg := Message{r.FormValue("content"), int(userId64), int(sendToId64)}
-
-		// get the chan based on the sendToId
-		// add the msg to the channel
-		go addmsg(msg, int(sendToId64), app.findChan)
-
-		fmt.Fprintf(w, "message sent")
+	fmt.Println("receive Message")
+	if r.Method == "GET" {
+		t, _ := template.ParseFiles("tmpl/receive.gtpl")
+		t.Execute(w, nil)
 		return http.StatusAccepted, nil
 	} else {
-		toJsonResponse("not valid token, please log in", w)
-		return http.StatusUnauthorized, errors.New("not valid token")
+		r.ParseForm()
+
+		if validateToken(r.FormValue("token")) {
+			// print the info to the server console
+			fmt.Println(r.Form)
+			fmt.Println("path", r.URL.Path)
+			fmt.Println("scheme", r.URL.Scheme)
+			fmt.Println(r.Form["url_long"])
+
+			fmt.Println("looking for message for userid: ", r.Form["id"])
+
+			// accroding to the user id find his chan
+			userId64, err := strconv.ParseInt(r.FormValue("id"), 0, 0)
+			if err != nil {
+				log.Println("parse user id err", err)
+			} else {
+				c := app.findChan(int(userId64))
+				fmt.Println("channel length", len(c))
+				if c != nil && len(c) > 0 {
+					var msgs []Message
+					for i := 0; i < len(c); i++ {
+						msgs = append(msgs, <-c)
+					}
+
+					toJsonResponse(msgs, w)
+				} else {
+					toJsonResponse(ErrMessage{"no message"}, w)
+				}
+			}
+		}
+		return http.StatusAccepted, nil
 	}
 }
 
+/* parameters need:
+ * username(send user)
+ * id (send user)
+ * sendTo userId
+ * content (message content)
+ */
+func sendMessage(app AppConfig, w http.ResponseWriter, r *http.Request) (int, error) {
+	//get url param, for POST method, get the body
+	if r.Method == "GET" {
+		t, _ := template.ParseFiles("tmpl/send.gtpl")
+		t.Execute(w, nil)
+		return http.StatusAccepted, nil
+	} else {
+		r.ParseForm()
+
+		//print out the form info
+		if validateToken(strings.Join(r.Form["token"], "")) {
+			fmt.Println("user loged in: ", r.Form["username"])
+
+			// print the info to the server console
+			fmt.Println(r.Form)
+			fmt.Println("path", r.URL.Path)
+			fmt.Println("scheme", r.URL.Scheme)
+			fmt.Println(r.Form["url_long"])
+
+			fmt.Println("username:", r.Form["username"])
+			fmt.Println("user id:", r.Form["id"])
+			fmt.Println("userid sendTo:", r.Form["sendToId"])
+			fmt.Println("content:", r.Form["content"])
+
+			for k, v := range r.Form {
+				fmt.Println("key:", k)
+				fmt.Println("val:", strings.Join(v, ""))
+			}
+
+			// construct a new message
+			userId64, err := strconv.ParseInt(r.FormValue("id"), 0, 0)
+
+			if err != nil {
+				log.Println("parse user id err", err)
+			}
+
+			sendToId64, err := strconv.ParseInt(r.FormValue("sendToId"), 0, 0)
+			if err != nil {
+				log.Println("parse sendTo id err", err)
+			}
+
+			msg := Message{r.FormValue("content"), int(userId64), int(sendToId64)}
+
+			// get the chan based on the sendToId
+			// add the msg to the channel
+			c := app.findChan(int(sendToId64))
+			go addmsg(msg, c)
+
+			fmt.Println("message sent", len(app.findChan(0)))
+			toJsonResponse("message received", w)
+			return http.StatusAccepted, nil
+		} else {
+			toJsonResponse(ErrMessage{"not valid token, please log in"}, w)
+			return http.StatusUnauthorized, errors.New("not valid token")
+		}
+	}
+
+}
+
 func login(app AppConfig, w http.ResponseWriter, r *http.Request) (int, error) {
-	fmt.Println("method:", r.Method) // get the http method
+	fmt.Println("method login:", r.Method) // get the http method
 	if r.Method == "GET" {
 		t, _ := template.ParseFiles("tmpl/login.gtpl")
 		t.Execute(w, nil)
@@ -141,7 +207,7 @@ func login(app AppConfig, w http.ResponseWriter, r *http.Request) (int, error) {
 			toJsonResponse(ur, w)
 			return http.StatusAccepted, nil
 		} else {
-			toJsonResponse("wrong user name or password", w)
+			toJsonResponse(ErrMessage{"wrong user name or password"}, w)
 			return http.StatusUnauthorized, errors.New("not valid token")
 		}
 
@@ -201,7 +267,7 @@ func serverSetup(appConfig AppConfig, port string) {
 
 	fmt.Println("setup login path")
 
-	http.HandleFunc("/", AppHandler{appConfig, login}.ServeHTTP)
+	http.HandleFunc("/login", AppHandler{appConfig, login}.ServeHTTP)
 
 	// setup the lisenting port
 	err := http.ListenAndServe(":"+port, nil)
@@ -213,7 +279,7 @@ func serverSetup(appConfig AppConfig, port string) {
 }
 
 func main() {
-	msgc := make(chan Message)
+	msgc := make(chan Message, MAX_CHAN)
 	appConfig := AppConfig{msgc}
 	serverSetup(appConfig, "9000")
 }

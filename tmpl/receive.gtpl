@@ -4,9 +4,8 @@
 </head>
 <body>
 <div id="chat"></div>
-<form action="/login" method="post">
-    txt:<input type="text" name="content">
-    sendTo:<input type="text" name="SendToId">
+<form action="/receive" method="post">   
+    username:<input type="text" name="id">
     <input type="submit" value="submit">
 </form>
 </body>
