@@ -107,7 +107,8 @@ func receiveMessage(app AppConfig, w http.ResponseWriter, r *http.Request) (int,
 				fmt.Println("channel length", len(c))
 				if c != nil && len(c) > 0 {
 					var msgs []Message
-					for i := 0; i < len(c); i++ {
+					count := len(c)
+					for i := 0; i < count; i++ {
 						msgs = append(msgs, <-c)
 					}
 
