@@ -49,12 +49,8 @@ func (app AppConfig) findChan(uid int) chan Message {
 }
 
 func addmsg(a Message, c chan Message) {
-	fmt.Println("===>msg len in go")
-
 	// todo this is a adapter sub
 	c <- a
-	fmt.Println("===>msg len in go", len(c))
-
 }
 
 func validateToken(token string) bool {
