@@ -110,7 +110,7 @@ func sync(app AppConfig, w http.ResponseWriter, r *http.Request) (int, error) {
 
 					toJsonResponse(msgs, w)
 				} else {
-					toJsonResponse(ErrMessage{"no message"}, w)
+					toJsonResponse("no message", w)
 				}
 			}
 		}

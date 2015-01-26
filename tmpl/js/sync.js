@@ -7,8 +7,9 @@ function sync(){
 	this.startWorker = function() {
 		if(typeof(Worker) !== "undefined") {
 			if(typeof(w) == "undefined") {
-				w = new Worker("js/demo_workers.js");
+				w = new Worker("js/sync_worker.js");
 			}
+			// addEventListener is bettern than onmessage()
 			w.addEventListener('message', function(e) {
 				document.getElementById("result").innerHTML = event.data;
 			}, false)
@@ -24,7 +25,5 @@ function sync(){
 		w.terminate();
 		w = undefined;
 	}
-
-
 
 }
