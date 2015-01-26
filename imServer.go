@@ -76,7 +76,7 @@ func (app AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
  * parameter needed:
  * userid (receive user)
  */
-func receiveMessage(app AppConfig, w http.ResponseWriter, r *http.Request) (int, error) {
+func sync(app AppConfig, w http.ResponseWriter, r *http.Request) (int, error) {
 	fmt.Println("receive Message")
 	if r.Method == "GET" {
 		t, _ := template.ParseFiles("tmpl/receive.gtpl")
