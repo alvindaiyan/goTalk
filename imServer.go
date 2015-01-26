@@ -253,14 +253,17 @@ func tokenGenerator() (string, error) {
 
 func serverSetup(appConfig AppConfig, port string) {
 	fmt.Println("start setup server:")
+	http.HandleFunc("/js/", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "tmpl/"+r.URL.Path[1:])
+	})
 
 	fmt.Println("setup send path (/send)")
 
 	http.HandleFunc("/send", AppHandler{appConfig, sendMessage}.ServeHTTP)
 
-	fmt.Println("setup receive path")
+	fmt.Println("setup sync path")
 
-	http.HandleFunc("/receive", AppHandler{appConfig, receiveMessage}.ServeHTTP)
+	http.HandleFunc("/sync", AppHandler{appConfig, sync}.ServeHTTP)
 
 	fmt.Println("setup login path")
 
