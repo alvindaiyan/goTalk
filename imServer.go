@@ -131,6 +131,8 @@ func sendMessage(app AppConfig, w http.ResponseWriter, r *http.Request) (int, er
 		t.Execute(w, nil)
 		return http.StatusAccepted, nil
 	} else {
+		fmt.Println("method send:", r.Method) // get the http method
+
 		r.ParseForm()
 
 		//print out the form info
