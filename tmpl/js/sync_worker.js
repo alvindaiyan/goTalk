@@ -1,20 +1,33 @@
 var i = 0;
 var count = 0;
+var userid = -1;
+
+onmessage = function(e) {
+  console.log('Message received from main script');
+  var workerResult = 'Result: ' + (e.data);
+  console.log('Posting message back to main script: ' + workerResult);
+  userid = e.data;
+}
 
 // data ||| total sync count ||| msg recevied
 function syncMessage() {
-    var msg = "";
-    i = i + 1;    
-    ajax.post('/sync', 
-      {token: "this is token", id: 1234}, 
-      function(data) {
-        var jObj = JSON.parse(data);
-        if(jObj != "no message") {            
-            count++;
-            var msg = data + " ||| " + i + " ||| " + count;
-            postMessage(msg);
-        }
-    });    
+    if(userid != -1 && userid != ""){
+        var msg = "";
+        i = i + 1;    
+        ajax.post('/sync', 
+        {
+            token: "this is token", 
+            id: userid
+        }, 
+        function(data) {
+            var jObj = JSON.parse(data);
+            if(jObj != "no message") {            
+                count++;
+                var msg = data + " ||| " + i + " ||| " + count;
+                postMessage(msg);
+            }
+        });    
+    }
     setTimeout("syncMessage()",1000);
 }
 

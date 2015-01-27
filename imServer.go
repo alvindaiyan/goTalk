@@ -25,7 +25,7 @@ const (
 )
 
 type AppConfig struct {
-	msgc chan Message
+	msgcs map[int]chan Message
 }
 
 type Message struct {
@@ -43,9 +43,15 @@ type AppHandler struct {
 	h         func(app AppConfig, w http.ResponseWriter, r *http.Request) (int, error)
 }
 
-func (app AppConfig) findChan(uid int) chan Message {
+func (app *AppConfig) findChan(uid int) chan Message {
 	// todo this is a adapter sub
-	return app.msgc
+	if app.msgcs[uid] != nil {
+		return app.msgcs[uid]
+	}
+	// create a new channel for the user
+	msgc := make(chan Message, MAX_CHAN)
+	app.msgcs[uid] = msgc
+	return app.msgcs[uid]
 }
 
 func addmsg(a Message, c chan Message) {
@@ -281,7 +287,7 @@ func serverSetup(appConfig AppConfig, port string) {
 }
 
 func main() {
-	msgc := make(chan Message, MAX_CHAN)
-	appConfig := AppConfig{msgc}
+	msgcs := make(map[int]chan Message)
+	appConfig := AppConfig{msgcs}
 	serverSetup(appConfig, "9000")
 }

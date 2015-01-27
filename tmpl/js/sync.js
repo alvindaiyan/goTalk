@@ -4,19 +4,18 @@ function sync(){
 	var  w;
 	
 
-	this.startWorker = function() {
+	var startWorker = function() {
 		if(typeof(Worker) !== "undefined") {
 			if(typeof(w) == "undefined") {
 				w = new Worker("js/sync_worker.js");
+				w.postMessage($("#myNameId").val());
 			}
 			// addEventListener is bettern than onmessage()
 			w.addEventListener('message', function() {				
 				var strArr = event.data.split(" ||| ");
 				var json = strArr[0];
 				var count = strArr[1];
-				var msgcount = strArr[2];
-
-					
+				var msgcount = strArr[2];				
 
 				// Content       string
 				// UserIdSend    int
@@ -32,18 +31,30 @@ function sync(){
 				$("#myMsgNum").text(msgObjs.length);	
 				
 				document.getElementById("result").innerHTML = "data: " + json + ", count: " + count + ", msgs: " + msgcount + " mgs";
-			}, false)
-			// w.onmessage = function(event) {
-			// 	document.getElementById("result").innerHTML = event.data;
-			// };
+				$("#chat").scrollTop($("#chat")[0].scrollHeight);
+			}, false);
 		} else {
 			document.getElementById("result").innerHTML = "Sorry, your browser does not support Web Workers...";
 		}
 	}
 
+
+
+	$( document ).ready(function(){
+		var id = prompt("Please enter your id", "1234");
+		$("#myNameId").val(id);
+		startWorker();		
+	})
+
+
+
 	this.stopWorker = function() { 
 		w.terminate();
 		w = undefined;
+	}
+
+	this.startWorker = function(){
+		startWorker();
 	}
 
 	this.displayReceivedMsg = function(userId, msg){
