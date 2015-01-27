@@ -1,18 +1,21 @@
 var i = 0;
-var msg = "";
 var count = 0;
 
+// data ||| total sync count ||| msg recevied
 function syncMessage() {
+    var msg = "";
     i = i + 1;    
-	ajax.post('/sync', 
-		{token: "this is token", id: 1234}, 
-		function(data) {
-			var jObj = JSON.parse(data);
-			if(jObj != "no message") {count++;}
-    	msg = data + ", " + i + ", total msg received: " + count;
-	});
-    postMessage(msg);
-    setTimeout("syncMessage()",500);
+    ajax.post('/sync', 
+      {token: "this is token", id: 1234}, 
+      function(data) {
+        var jObj = JSON.parse(data);
+        if(jObj != "no message") {            
+            count++;
+            var msg = data + " ||| " + i + " ||| " + count;
+            postMessage(msg);
+        }
+    });    
+    setTimeout("syncMessage()",1000);
 }
 
 ////////////////////////////

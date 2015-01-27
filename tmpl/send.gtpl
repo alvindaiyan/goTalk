@@ -23,7 +23,7 @@
         }
         .bs-callout p:last-child {
         margin-bottom: 0;
-        min-width: 300px;
+        min-width: 500px;
         }
         .bs-callout code {
         border-radius: 3px;
@@ -81,7 +81,7 @@
         }
         .bs-callout-hs p:last-child {
         margin-bottom: 0;
-        min-width: 300px;
+        min-width: 500px;
         }
         .bs-callout-hs code {
         border-radius: 3px;
@@ -118,7 +118,7 @@
                 <span class="label label-info" id="myNameTxt" > alvindaiyan</span>
                 |
                 <label for="myMsgNum">Message </label> 
-                <span class="badge" id="myMsgNum">3</span>
+                <span class="badge" id="myMsgNum">0</span>
             </div>
             <div class="form-group">
                 <label for="myNameId">My ID</label>

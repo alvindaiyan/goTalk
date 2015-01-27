@@ -10,8 +10,28 @@ function sync(){
 				w = new Worker("js/sync_worker.js");
 			}
 			// addEventListener is bettern than onmessage()
-			w.addEventListener('message', function(e) {
-				document.getElementById("result").innerHTML = event.data;
+			w.addEventListener('message', function() {				
+				var strArr = event.data.split(" ||| ");
+				var json = strArr[0];
+				var count = strArr[1];
+				var msgcount = strArr[2];
+
+					
+
+				// Content       string
+				// UserIdSend    int
+				// UserIdReceive int
+
+				// update the chat area
+				var msgObjs = jQuery.parseJSON(json);
+				for( var i = 0; i < msgObjs.length; i++){				
+					appendMsg(msgObjs[i].UserIdSend, msgObjs[i].Content, true);	
+				}
+
+				// update the msg count
+				$("#myMsgNum").text(msgObjs.length);	
+				
+				document.getElementById("result").innerHTML = "data: " + json + ", count: " + count + ", msgs: " + msgcount + " mgs";
 			}, false)
 			// w.onmessage = function(event) {
 			// 	document.getElementById("result").innerHTML = event.data;
@@ -26,6 +46,10 @@ function sync(){
 		w = undefined;
 	}
 
+	this.displayReceivedMsg = function(userId, msg){
+		appendMsg()
+	}
+
 	this.sendMsg = function(){
 		var username = $("#myNameTxt").val();
 		var id = $("#myNameId").val();
@@ -34,7 +58,6 @@ function sync(){
 		if(content == '') {
 			alert("no empty content -_-!!!")
 		} else{
-
 			$.post('/send', 
 				{
 					username: username,
@@ -46,35 +69,6 @@ function sync(){
 					appendMsg("me (success)", content, false);
 					$("#chat").scrollTop($("#chat")[0].scrollHeight);
 				});
-			// $.ajax({
-			// 	type: "POST",
-			// 	url: "/send",
-			// 	async:true,
-			// 	contentType:false,
-			// 	cache: false,
-			// 	processData: false,
-			// 	data:{
-			// 		username: username,
-			// 		id: id,
-			// 		sendToId: sendToId,
-			// 		content: content
-			// 	},
-			// 	dataFilter: function(data) {
-			// 		console.log(JSON.stringify(data));
-			// 		appendMsg("me (success)", content, false);
-			// 		$("#chat").scrollTop($("#chat")[0].scrollHeight);
-
-			// 	}, 
-			// 	traditional:true,
-			// 	error :  function(err) {
-			// 		var result = jQuery.parseJSON(err.responseText);
-			// 		if(result.error)
-			// 		{
-			// 			alert(decodeURIComponent(result.error));                  
-			// 		}                 
-			// 	}
-			// });		
-
 		}
 		$("#enterTxt").val("");
 
