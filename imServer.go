@@ -63,6 +63,10 @@ func validateToken(token string) bool {
 	return true
 }
 
+func GetUserIdByName(uname string) (int, error) {
+	return 0, nil
+}
+
 func (app AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	status, err := app.h(app.appConfig, w, r)
 	if err != nil {
@@ -188,7 +192,6 @@ func sendMessage(app AppConfig, w http.ResponseWriter, r *http.Request) (int, er
 			return http.StatusUnauthorized, errors.New("not valid token")
 		}
 	}
-
 }
 
 func login(app AppConfig, w http.ResponseWriter, r *http.Request) (int, error) {
@@ -201,21 +204,25 @@ func login(app AppConfig, w http.ResponseWriter, r *http.Request) (int, error) {
 		r.ParseForm()
 		//print out the form info
 		fmt.Println("username:", r.Form["username"])
-
 		// construct return json str
 		token, ok := performLogin(strings.Join(r.Form["username"], ""), strings.Join(r.Form["password"], ""))
 		if ok {
 			var ur User
-			ur.Id = 0
 			ur.Name = strings.Join(r.Form["username"], "")
 			ur.Token = token
-			toJsonResponse(ur, w)
-			return http.StatusAccepted, nil
+			uid, err := GetUserIdByName(uname)
+			if err == nil {
+				ur.Id = uid
+				toJsonResponse(ur, w)
+				return http.StatusAccepted, nil
+			} else {
+				toJsonResponse("please register", w)
+				return http.StatusBadRequest, nil
+			}
 		} else {
 			toJsonResponse(ErrMessage{"wrong user name or password"}, w)
 			return http.StatusUnauthorized, errors.New("not valid token")
 		}
-
 	}
 }
 
