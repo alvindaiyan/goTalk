@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	model "github.com/model"
 	"html/template"
 	"log"
 	"net/http"
@@ -13,12 +14,6 @@ import (
 	"strconv"
 	"strings"
 )
-
-type User struct {
-	Id    int
-	Name  string
-	Token string
-}
 
 const (
 	MAX_CHAN = 10000
@@ -207,10 +202,10 @@ func login(app AppConfig, w http.ResponseWriter, r *http.Request) (int, error) {
 		// construct return json str
 		token, ok := performLogin(strings.Join(r.Form["username"], ""), strings.Join(r.Form["password"], ""))
 		if ok {
-			var ur User
+			var ur model.User
 			ur.Name = strings.Join(r.Form["username"], "")
 			ur.Token = token
-			uid, err := GetUserIdByName(uname)
+			uid, err := GetUserIdByName(ur.Name)
 			if err == nil {
 				ur.Id = uid
 				toJsonResponse(ur, w)
