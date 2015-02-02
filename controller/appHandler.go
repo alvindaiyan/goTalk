@@ -195,6 +195,7 @@ func toJsonResponse(v interface{}, w http.ResponseWriter) {
 }
 
 func performLogin(uname string, pwd string) (string, bool) {
+	// this method is not finished
 	if pwd == "password" {
 		token, err := tokenGenerator()
 		if err != nil {
@@ -206,12 +207,11 @@ func performLogin(uname string, pwd string) (string, bool) {
 	} else {
 		return "wrong password", false
 	}
-
 }
 
 func tokenGenerator() (string, error) {
 	// change the length of the generated random string here
-	size := 32
+	size := config.TOKEN_LENGTH
 
 	rb := make([]byte, size)
 	_, err := rand.Read(rb)

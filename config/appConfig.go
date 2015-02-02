@@ -11,7 +11,8 @@ type AppConfig struct {
 }
 
 const (
-	MAX_CHAN = 10000
+	MAX_CHAN     = 10000
+	TOKEN_LENGTH = 32
 )
 
 func (app *AppConfig) Init() {
