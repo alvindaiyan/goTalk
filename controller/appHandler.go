@@ -45,7 +45,7 @@ func (app AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
  * parameter needed:
  * userid (receive user)
  */
-func sync(app config.AppConfig, w http.ResponseWriter, r *http.Request) (int, error) {
+func syncMessages(app config.AppConfig, w http.ResponseWriter, r *http.Request) (int, error) {
 	fmt.Println("receive Message")
 	if r.Method == "GET" {
 		t, _ := template.ParseFiles("tmpl/receive.gtpl")
@@ -237,7 +237,7 @@ func ServerSetup(appConfig config.AppConfig, port string) {
 
 	fmt.Println("setup sync path")
 
-	http.HandleFunc("/sync", AppHandler{appConfig, sync}.ServeHTTP)
+	http.HandleFunc("/sync", AppHandler{appConfig, syncMessages}.ServeHTTP)
 
 	fmt.Println("setup login path")
 

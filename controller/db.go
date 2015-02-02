@@ -11,23 +11,32 @@ var once sync.Once
 // user = gotalk
 // password = gotalk123
 type DBCon struct {
+	uname    string
+	pwd      string
+	dbname   string
 	instance *sql.DB
 }
 
 type DBHandler struct {
 	ins      DBCon
-	instance func(ins *DBCon, usr string, pwd string) *sql.DB
+	instance func(ins *DBCon) *sql.DB
 }
 
-func (d DBHandler) Instance(usr string, pwd string) *sql.DB {
-	return d.instance(&d.ins, usr, pwd)
+func (d DBHandler) Instance() *sql.DB {
+	return d.instance(&d.ins)
 }
 
 // connect for pgql
-func PostgresIns(con *DBCon, usr string, pwd string) *sql.DB {
+func PostgresIns(con *DBCon) *sql.DB {
 	if con.instance == nil {
 		once.Do(func() {
-			db, err := sql.Open("postgres", "user="+usr+" password="+pwd+" dbname=goTalk-db sslmode=disable")
+			// todo: read from a config file
+			////////////////////////////////
+			con.uname = "postgres"
+			con.pwd = "Password1"
+			con.dbname = "godb"
+			////////////////////////////////
+			db, err := sql.Open("postgres", "user="+con.uname+" password="+con.pwd+" dbname="+con.dbname+" sslmode=disable")
 			checkErr(err)
 			con.instance = db
 		})
