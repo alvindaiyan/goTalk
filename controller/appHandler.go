@@ -1,8 +1,6 @@
 package controller
 
 import (
-	"crypto/rand"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -20,10 +18,6 @@ import (
 type AppHandler struct {
 	appConfig config.AppConfig
 	h         func(app config.AppConfig, w http.ResponseWriter, r *http.Request) (int, error)
-}
-
-func validateToken(token string) bool {
-	return true
 }
 
 func (app AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -54,7 +48,7 @@ func syncMessages(app config.AppConfig, w http.ResponseWriter, r *http.Request) 
 	} else {
 		r.ParseForm()
 
-		if validateToken(r.FormValue("token")) {
+		if util.ValidateToken(r.FormValue("token")) {
 			// print the info to the server console
 			fmt.Println(r.Form)
 			fmt.Println("path", r.URL.Path)
@@ -105,7 +99,7 @@ func sendMessage(app config.AppConfig, w http.ResponseWriter, r *http.Request) (
 		r.ParseForm()
 
 		//print out the form info
-		if validateToken(strings.Join(r.Form["token"], "")) {
+		if util.ValidateToken(strings.Join(r.Form["token"], "")) {
 			fmt.Println("user loged in: ", r.Form["username"])
 
 			// print the info to the server console
@@ -164,7 +158,7 @@ func login(app config.AppConfig, w http.ResponseWriter, r *http.Request) (int, e
 		//print out the form info
 		fmt.Println("username:", r.Form["username"])
 		// construct return json str
-		token, ok := performLogin(strings.Join(r.Form["username"], ""), strings.Join(r.Form["password"], ""))
+		token, ok := util.PerformLogin(strings.Join(r.Form["username"], ""), strings.Join(r.Form["password"], ""))
 		if ok {
 			var ur model.User
 			ur.Name = strings.Join(r.Form["username"], "")
@@ -192,37 +186,6 @@ func toJsonResponse(v interface{}, w http.ResponseWriter) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
-}
-
-func performLogin(uname string, pwd string) (string, bool) {
-	// this method is not finished
-	if pwd == "password" {
-		token, err := tokenGenerator()
-		if err != nil {
-			fmt.Println(err)
-			return token, false
-		} else {
-			return token, true
-		}
-	} else {
-		return "wrong password", false
-	}
-}
-
-func tokenGenerator() (string, error) {
-	// change the length of the generated random string here
-	size := config.TOKEN_LENGTH
-
-	rb := make([]byte, size)
-	_, err := rand.Read(rb)
-	if err != nil {
-		fmt.Println(err)
-		return "error", errors.New("cannot generate token for user")
-	}
-
-	rs := base64.URLEncoding.EncodeToString(rb)
-
-	return rs, nil
 }
 
 func ServerSetup(appConfig config.AppConfig, port string) {

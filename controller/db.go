@@ -22,6 +22,18 @@ type DBHandler struct {
 	instance func(ins *DBCon) *sql.DB
 }
 
+type ConstrainValue struct {
+	value    string
+	dataType DataType
+}
+
+type DataType int
+
+const (
+	INTEGER DataType = iota
+	STRING
+)
+
 func (d DBHandler) Instance() *sql.DB {
 	return d.instance(&d.ins)
 }
@@ -48,4 +60,20 @@ func checkErr(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func (d *DBHandler) SELECT(table_name string, constr map[string]ConstrainValue) {
+
+}
+
+func (d *DBHandler) INSERT(table_name string) {
+
+}
+
+func (d *DBHandler) UPDATE(table_name string) {
+
+}
+
+func (d *DBHandler) DELETE(table_name string) {
+
 }
