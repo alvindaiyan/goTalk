@@ -20,13 +20,7 @@ const (
 )
 
 type AppConfig struct {
-	msgcs map[int]chan Message
-}
-
-type Message struct {
-	Content       string
-	UserIdSend    int
-	UserIdReceive int
+	msgcs map[int]chan model.Message
 }
 
 type ErrMessage struct {
@@ -38,28 +32,19 @@ type AppHandler struct {
 	h         func(app AppConfig, w http.ResponseWriter, r *http.Request) (int, error)
 }
 
-func (app *AppConfig) findChan(uid int) chan Message {
+func (app *AppConfig) findChan(uid int) chan model.Message {
 	// todo this is a adapter sub
 	if app.msgcs[uid] != nil {
 		return app.msgcs[uid]
 	}
 	// create a new channel for the user
-	msgc := make(chan Message, MAX_CHAN)
+	msgc := make(chan model.Message, MAX_CHAN)
 	app.msgcs[uid] = msgc
 	return app.msgcs[uid]
 }
 
-func addmsg(a Message, c chan Message) {
-	// todo this is a adapter sub
-	c <- a
-}
-
 func validateToken(token string) bool {
 	return true
-}
-
-func GetUserIdByName(uname string) (int, error) {
-	return 0, nil
 }
 
 func (app AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -107,7 +92,7 @@ func sync(app AppConfig, w http.ResponseWriter, r *http.Request) (int, error) {
 				c := app.findChan(int(userId64))
 				fmt.Println("channel length", len(c))
 				if c != nil && len(c) > 0 {
-					var msgs []Message
+					var msgs []model.Message
 					count := len(c)
 					for i := 0; i < count; i++ {
 						msgs = append(msgs, <-c)
@@ -172,12 +157,12 @@ func sendMessage(app AppConfig, w http.ResponseWriter, r *http.Request) (int, er
 				log.Println("parse sendTo id err", err)
 			}
 
-			msg := Message{r.FormValue("content"), int(userId64), int(sendToId64)}
+			msg := model.Message{r.FormValue("content"), int(userId64), int(sendToId64)}
 
 			// get the chan based on the sendToId
 			// add the msg to the channel
 			c := app.findChan(int(sendToId64))
-			go addmsg(msg, c)
+			go model.Addmsg(msg, c)
 
 			fmt.Println("message sent", len(app.findChan(0)))
 			toJsonResponse("message received", w)
@@ -205,7 +190,7 @@ func login(app AppConfig, w http.ResponseWriter, r *http.Request) (int, error) {
 			var ur model.User
 			ur.Name = strings.Join(r.Form["username"], "")
 			ur.Token = token
-			uid, err := GetUserIdByName(ur.Name)
+			uid, err := model.GetUserIdByName(ur.Name)
 			if err == nil {
 				ur.Id = uid
 				toJsonResponse(ur, w)
@@ -289,7 +274,7 @@ func serverSetup(appConfig AppConfig, port string) {
 }
 
 func main() {
-	msgcs := make(map[int]chan Message)
+	msgcs := make(map[int]chan model.Message)
 	appConfig := AppConfig{msgcs}
 	serverSetup(appConfig, "9000")
 }

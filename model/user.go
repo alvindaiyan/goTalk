@@ -5,3 +5,7 @@ type User struct {
 	Name  string
 	Token string
 }
+
+func GetUserIdByName(uname string) (int, error) {
+	return 0, nil
+}
