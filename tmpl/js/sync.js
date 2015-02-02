@@ -12,7 +12,7 @@ function sync(){
 			}
 			// addEventListener is bettern than onmessage()
 			w.addEventListener('message', function() {				
-				var strArr = event.data.split(" ||| ");
+				var strArr = event.data.split(" ||| "); // firefox not work!!!
 				var json = strArr[0];
 				var count = strArr[1];
 				var msgcount = strArr[2];				
