@@ -1,2 +1,2 @@
 # goTalk
-a simple IM program based on Go
+A simple Go based IM system.
