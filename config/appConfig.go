@@ -2,7 +2,7 @@ package config
 
 import (
 	"errors"
-	model "github.com/model"
+	model "github.com/model/DAO"
 	"strconv"
 )
 

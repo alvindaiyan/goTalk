@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	config "github.com/config"
-	model "github.com/model"
+	model "github.com/model/DAO"
 	util "github.com/util"
 	"html/template"
 	"log"

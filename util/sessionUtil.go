@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"github.com/config"
+	// model "github.com/model/DAO"
 )
 
 func PerformLogin(uname string, pwd string) (string, bool) {
@@ -19,6 +20,10 @@ func PerformLogin(uname string, pwd string) (string, bool) {
 	} else {
 		return "wrong password", false
 	}
+}
+
+func PerformLogout(token string) {
+	// todo this is a sub
 }
 
 func TokenGenerator() (string, error) {
