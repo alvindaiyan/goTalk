@@ -1,8 +1,9 @@
-package model
+package DAO
 
 import (
 	"fmt"
 	db "github.com/model"
+	"github.com/util"
 )
 
 type User struct {
@@ -25,9 +26,10 @@ func NewUserDAO() *UserDAO {
 
 // save user
 func (u *UserDAO) Save(user User) int {
+	time := util.GetCurrentTime("2006-01-02")
 	stmt, err := db.Instance().Prepare("INSERT INTO userinfo(username,password,created) VALUES($1,$2,$3) RETURNING uid")
 	db.CheckErr(err)
-	res, err := stmt.Exec(user.Name, user.Pwd, "2012-12-09")
+	res, err := stmt.Exec(user.Name, user.Pwd, time)
 	db.CheckErr(err)
 	id, err := res.LastInsertId()
 	db.CheckErr(err)

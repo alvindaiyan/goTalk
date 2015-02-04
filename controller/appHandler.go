@@ -48,7 +48,7 @@ func syncMessages(app config.AppConfig, w http.ResponseWriter, r *http.Request) 
 	} else {
 		r.ParseForm()
 
-		if util.ValidateToken(r.FormValue("token")) {
+		if model.ValidateToken(r.FormValue("token")) {
 			// print the info to the server console
 			fmt.Println(r.Form)
 			fmt.Println("path", r.URL.Path)
@@ -99,7 +99,7 @@ func sendMessage(app config.AppConfig, w http.ResponseWriter, r *http.Request) (
 		r.ParseForm()
 
 		//print out the form info
-		if util.ValidateToken(strings.Join(r.Form["token"], "")) {
+		if model.ValidateToken(strings.Join(r.Form["token"], "")) {
 			fmt.Println("user loged in: ", r.Form["username"])
 
 			// print the info to the server console
@@ -158,7 +158,7 @@ func login(app config.AppConfig, w http.ResponseWriter, r *http.Request) (int, e
 		//print out the form info
 		fmt.Println("username:", r.Form["username"])
 		// construct return json str
-		token, ok := util.PerformLogin(strings.Join(r.Form["username"], ""), strings.Join(r.Form["password"], ""))
+		token, ok := model.PerformLogin(strings.Join(r.Form["username"], ""), strings.Join(r.Form["password"], ""))
 		if ok {
 			var ur model.User
 			ur.Name = strings.Join(r.Form["username"], "")

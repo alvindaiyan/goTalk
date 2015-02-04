@@ -1,4 +1,4 @@
-package model
+package DAO
 
 type Message struct {
 	Content       string

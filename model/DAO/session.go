@@ -1,16 +1,19 @@
-package util
+package DAO
 
 import (
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
-	"github.com/config"
-	model "github.com/model/DAO"
+	// model "github.com/model/DAO"
+)
+
+const (
+	TOKEN_LENGTH = 32
 )
 
 func PerformLogin(uname string, pwd string) (string, bool) {
 	// this method is not finished
-	userDao := model.NewUserDAO()
+	userDao := NewUserDAO()
 	user := userDao.GetUserByName(uname)
 	if pwd == user.Pwd {
 		token, err := TokenGenerator()
@@ -30,7 +33,7 @@ func PerformLogout(token string) {
 
 func TokenGenerator() (string, error) {
 	// change the length of the generated random string here
-	size := config.TOKEN_LENGTH
+	size := TOKEN_LENGTH
 
 	rb := make([]byte, size)
 	_, err := rand.Read(rb)

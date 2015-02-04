@@ -3,6 +3,7 @@ package controller
 import (
 	"database/sql"
 	_ "github.com/lib/pq"
+	"log"
 	"sync"
 )
 
@@ -37,6 +38,7 @@ func postgresIns() *sql.DB {
 			pwd := "Password1"
 			dbname := "godb"
 			////////////////////////////////
+			log.Println("get a data connection")
 			db, err := sql.Open("postgres", "user="+uname+" password="+pwd+" dbname="+dbname+" sslmode=disable")
 			CheckErr(err)
 			dbCon = db

@@ -1,4 +1,4 @@
-package config
+package model
 
 import (
 	"errors"
@@ -11,8 +11,7 @@ type AppConfig struct {
 }
 
 const (
-	MAX_CHAN     = 10000
-	TOKEN_LENGTH = 32
+	MAX_CHAN = 10000
 )
 
 func (app *AppConfig) Init() {
