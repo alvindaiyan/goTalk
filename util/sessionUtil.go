@@ -5,12 +5,14 @@ import (
 	"encoding/base64"
 	"errors"
 	"github.com/config"
-	// model "github.com/model/DAO"
+	model "github.com/model/DAO"
 )
 
 func PerformLogin(uname string, pwd string) (string, bool) {
 	// this method is not finished
-	if pwd == "password" {
+	userDao := model.NewUserDAO()
+	user := userDao.GetUserByName(uname)
+	if pwd == user.Pwd {
 		token, err := TokenGenerator()
 		if err != nil {
 			return token, false

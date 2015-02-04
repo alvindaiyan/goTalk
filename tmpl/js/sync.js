@@ -8,7 +8,7 @@ function sync(){
 		if(typeof(Worker) !== "undefined") {
 			if(typeof(w) == "undefined") {
 				w = new Worker("js/sync_worker.js");
-				w.postMessage($("#myNameId").val());
+				w.postMessage($("#myNameId").text());
 			}
 			// addEventListener is bettern than onmessage()
 			w.addEventListener('message', function() {				
@@ -41,9 +41,21 @@ function sync(){
 
 
 	$( document ).ready(function(){
-		var id = prompt("Please enter your id", "1234");
-		$("#myNameId").val(id);
-		startWorker();		
+		var name = prompt("Please enter your name", "1234");
+		var id = 0;
+		$.post('/getuseridbyname',
+			{username: name},
+			function(data){
+				console.log(JSON.stringify(data));
+				try{					
+					id = data.Id;
+					$("#myNameId").text(id);
+					$("#myNameTxt").text(name);
+					startWorker();		
+				} catch(err){
+					alert("cannot load user" + err)
+				}
+			});		
 	})
 
 
@@ -62,8 +74,8 @@ function sync(){
 	}
 
 	this.sendMsg = function(){
-		var username = $("#myNameTxt").val();
-		var id = $("#myNameId").val();
+		var username = $("#myNameTxt").text();
+		var id = $("#myNameId").text();
 		var sendToId = $("#reciverId").val();
 		var content = $("#enterTxt").val();
 		if(content == '') {

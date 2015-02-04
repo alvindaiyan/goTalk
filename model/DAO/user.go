@@ -89,3 +89,25 @@ func GetUserIdByName(uname string) (int, error) {
 
 	return uid, nil
 }
+
+// get user by id
+func (u *UserDAO) GetUserByName(uname string) User {
+	stmt, err := db.Instance().Prepare("select uid, username, password from userinfo where username=$1")
+	db.CheckErr(err)
+
+	rows, err := stmt.Query(uname)
+
+	var usr User
+	for rows.Next() {
+		var uid int
+		var username string
+		var password string
+		err = rows.Scan(&uid, &username, &password)
+		db.CheckErr(err)
+		usr.Id = uid
+		usr.Name = username
+		usr.Pwd = password
+	}
+
+	return usr
+}

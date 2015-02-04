@@ -114,7 +114,8 @@
             </div>
             <div class="form-group">
                 <label for="myNameId">My ID</label>
-                <input type="text" class="form-control" id="myNameId" placeholder="e.g. 1234" name="id">
+                <span class="label label-info" id="myNameId" name="id"> alvindaiyan</span>
+                <!-- <input type="text" class="form-control" id="myNameId" placeholder="e.g. 1234" name="id"> -->
             </div>
             <div class="form-group">
                 <label for="reciverId">Reciver ID</label>

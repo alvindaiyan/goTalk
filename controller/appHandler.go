@@ -179,6 +179,25 @@ func login(app config.AppConfig, w http.ResponseWriter, r *http.Request) (int, e
 	}
 }
 
+func getUserIdbyName(app config.AppConfig, w http.ResponseWriter, r *http.Request) (int, error) {
+	fmt.Println("method get user id by name:", r.Method) // get the http method
+	// if r.Method == "GET" {
+	// 	t, _ := template.ParseFiles("tmpl/login.gtpl")
+	// 	t.Execute(w, nil)
+	// 	return http.StatusAccepted, nil
+	// } else {
+	r.ParseForm()
+	//print out the form info
+	fmt.Println("username:", r.Form["username"])
+	// construct return json str
+	uname := strings.Join(r.Form["username"], "")
+	userDao := model.NewUserDAO()
+	user := userDao.GetUserByName(uname)
+	toJsonResponse(user, w)
+	return http.StatusAccepted, nil
+	// }
+}
+
 func toJsonResponse(v interface{}, w http.ResponseWriter) {
 	js, err := json.Marshal(v)
 	if err != nil {
@@ -205,6 +224,8 @@ func ServerSetup(appConfig config.AppConfig, port string) {
 	fmt.Println("setup login path")
 
 	http.HandleFunc("/login", AppHandler{appConfig, login}.ServeHTTP)
+
+	http.HandleFunc("/getuseridbyname", AppHandler{appConfig, getUserIdbyName}.ServeHTTP)
 
 	// setup the lisenting port
 	err := http.ListenAndServe(":"+port, nil)
