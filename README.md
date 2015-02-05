@@ -42,3 +42,5 @@ There is a map to store all the message channel and indexed by the user id. When
 > Problem: The message could be lost if the message is not successfully send at first time. need to be fixed!
 
 ## Security (Not Decide yet)
+
+Currently, using AES256.
