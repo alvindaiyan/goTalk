@@ -98,7 +98,8 @@ func sendMessage(app config.AppConfig, w http.ResponseWriter, r *http.Request) (
 
 		r.ParseForm()
 
-		//print out the form info
+		// everytime need to ensure the user is an available user by checking
+		// the token of the user
 		if model.ValidateToken(strings.Join(r.Form["token"], "")) {
 			fmt.Println("user loged in: ", r.Form["username"])
 
@@ -235,6 +236,8 @@ func ServerSetup(appConfig config.AppConfig, port string) {
 	}
 }
 
+// find the chanel for the user by the userid, if the chanel is not
+// exist, will create one and add to the map
 func findChan(app *config.AppConfig, uid int) chan model.Message {
 	// todo this is a adapter sub
 	if app.GetMsgcs()[uid] != nil {

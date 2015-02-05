@@ -1,9 +1,9 @@
 package DAO
 
 import (
-	"fmt"
 	db "github.com/model"
 	"github.com/util"
+	"log"
 )
 
 type User struct {
@@ -29,12 +29,18 @@ func (u *UserDAO) Save(user User) int {
 	time := util.GetCurrentTime("2006-01-02")
 	stmt, err := db.Instance().Prepare("INSERT INTO userinfo(username,password,created) VALUES($1,$2,$3) RETURNING uid")
 	db.CheckErr(err)
-	res, err := stmt.Exec(user.Name, user.Pwd, time)
+	hashpwd, err := encrypt(user.Pwd, KEY)
+	if err != nil {
+		log.Println("error encrypt the password")
+		return -1
+	}
+	res, err := stmt.Exec(user.Name, hashpwd, time)
 	db.CheckErr(err)
 	id, err := res.LastInsertId()
 	db.CheckErr(err)
-	fmt.Println(id)
+	log.Println(id)
 	return int(id)
+
 }
 
 // delete user
@@ -46,7 +52,7 @@ func (u *UserDAO) Delete(id int) {
 	affect, err := res.RowsAffected()
 	db.CheckErr(err)
 
-	fmt.Println(affect)
+	log.Println(affect)
 }
 
 // get user by id
