@@ -7,6 +7,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -33,7 +34,7 @@ type Manager struct {
 	maxlifetime int64
 }
 
-func NewManager(providerName, cookieName string, maklifetime int64) (*Manager, error) {
+func NewManager(provideName, cookieName string, maxlifetime int64) (*Manager, error) {
 	provider, ok := provides[provideName]
 	if !ok {
 		return nil, fmt.Errorf("session: unknown provide %q (forgotten import?)", provideName)
@@ -69,7 +70,7 @@ type SessionStore struct {
 }
 
 func (st *SessionStore) Set(key, value interface{}) error {
-	st.value[kye] = value
+	st.value[key] = value
 	pder.SessionUpdate(st.sid)
 	return nil
 }
@@ -96,7 +97,7 @@ func (st *SessionStore) SessionID() string {
 
 /////////////////////////////////////////////////////////
 ////////////////////// Session management ///////////////
-func (pder *ProviderImpl) SessionInit(sid string) (session.Session, error) {
+func (pder *ProviderImpl) SessionInit(sid string) (Session, error) {
 	pder.lock.Lock()
 	defer pder.lock.Unlock()
 	v := make(map[interface{}]interface{}, 0)
@@ -106,7 +107,7 @@ func (pder *ProviderImpl) SessionInit(sid string) (session.Session, error) {
 	return newsess, nil
 }
 
-func (pder *ProviderImpl) SessionRead(sid string) (session.Session, error) {
+func (pder *ProviderImpl) SessionRead(sid string) (Session, error) {
 	if element, ok := pder.sessions[sid]; ok {
 		return element.Value.(*SessionStore), nil
 	} else {
@@ -185,12 +186,15 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 	defer manager.lock.Unlock()
 	cookie, err := r.Cookie(manager.cookieName)
 	if err != nil || cookie.Value != "" {
-		sid := manager.sessionId()
+		sid, err := manager.sessionId()
+		if err != nil {
+			fmt.Errorf("cannot get sid")
+		}
 		session, _ = manager.provider.SessionInit(sid)
-		cookie := http.Cookie{Name: manager.cookieName, value: url.QueryEscape(sid), Path: "/", HttpOnly: true, MaxAge: int(manager.maxlifetime)}
+		cookie := http.Cookie{Name: manager.cookieName, Value: url.QueryEscape(sid), Path: "/", HttpOnly: true, MaxAge: int(manager.maxlifetime)}
 		http.SetCookie(w, &cookie)
 	} else {
-		sid, _ := url.QueryEscape(cookie.Value)
+		sid, _ := url.QueryUnescape(cookie.Value)
 		session, _ = manager.provider.SessionRead(sid)
 	}
 
