@@ -16,7 +16,7 @@ Currently, the project has not connect to any database but will in the future.
 
 # The Software Architecture
 
-The user can has two role in this simple IM system. One is the sender, and one is the receiver. Each user has a channel to store message. 
+The user can has two role in this simple IM system. One is the sender, and one is the receiver. Each user has a channel ([see the detail](https://golang.org/doc/effective_go.html#concurrency)) to store message. 
 
 ## The Message Sending Process
 
