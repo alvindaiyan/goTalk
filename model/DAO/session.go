@@ -1,6 +1,7 @@
 package DAO
 
 import (
+	"container/list"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -10,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"sync"
+	"time"
 )
 
 // encrypt method is aes256
@@ -21,6 +23,7 @@ var (
 	KEY            = []byte("XY0nG86PSRJqMGz957Yza1D34393MPII") // 32 bytes
 	provides       = make(map[string]Provider)
 	globalSessions *Manager
+	pder           = &ProviderImpl{list: list.New()}
 )
 
 type Manager struct {
@@ -31,14 +34,25 @@ type Manager struct {
 }
 
 func NewManager(providerName, cookieName string, maklifetime int64) (*Manager, error) {
-	return nil, nil
+	provider, ok := provides[provideName]
+	if !ok {
+		return nil, fmt.Errorf("session: unknown provide %q (forgotten import?)", provideName)
+	}
+	return &Manager{provider: provider, cookieName: cookieName, maxlifetime: maxlifetime}, nil
 }
 
 type Provider interface {
 	SessionInit(sid string) (Session, error)
 	SessionRead(sid string) (Session, error)
+	SessionUpdate(sid string) error
 	SessionDestroy(sid string) error
 	SessionGC(maxLifeTime int64)
+}
+
+type ProviderImpl struct {
+	lock     sync.Mutex               // locker
+	sessions map[string]*list.Element // save to memory
+	list     *list.List               // gc()
 }
 
 type Session interface {
@@ -47,6 +61,101 @@ type Session interface {
 	Delete(key interface{}) error     //delete session value
 	SessionID() string                //back current sessionID
 }
+
+type SessionStore struct {
+	sid          string                      // session id rule
+	timeAccessed time.Time                   // last vist time
+	value        map[interface{}]interface{} // sesiion value
+}
+
+func (st *SessionStore) Set(key, value interface{}) error {
+	st.value[kye] = value
+	pder.SessionUpdate(st.sid)
+	return nil
+}
+
+func (st *SessionStore) Get(key interface{}) interface{} {
+	pder.SessionUpdate(st.sid)
+	if v, ok := st.value[key]; ok {
+		return v
+	} else {
+		return nil
+	}
+	return nil
+}
+
+func (st *SessionStore) Delete(key interface{}) error {
+	delete(st.value, key)
+	pder.SessionUpdate(st.sid)
+	return nil
+}
+
+func (st *SessionStore) SessionID() string {
+	return st.sid
+}
+
+/////////////////////////////////////////////////////////
+////////////////////// Session management ///////////////
+func (pder *ProviderImpl) SessionInit(sid string) (session.Session, error) {
+	pder.lock.Lock()
+	defer pder.lock.Unlock()
+	v := make(map[interface{}]interface{}, 0)
+	newsess := &SessionStore{sid: sid, timeAccessed: time.Now(), value: v}
+	element := pder.list.PushBack(newsess)
+	pder.sessions[sid] = element
+	return newsess, nil
+}
+
+func (pder *ProviderImpl) SessionRead(sid string) (session.Session, error) {
+	if element, ok := pder.sessions[sid]; ok {
+		return element.Value.(*SessionStore), nil
+	} else {
+		sess, err := pder.SessionInit(sid)
+		return sess, err
+	}
+	return nil, nil
+}
+
+func (pder *ProviderImpl) SessionDestroy(sid string) error {
+	if element, ok := pder.sessions[sid]; ok {
+		delete(pder.sessions, sid)
+		pder.list.Remove(element)
+		return nil
+	}
+	return nil
+}
+
+func (pder *ProviderImpl) SessionGC(maxlifetime int64) {
+	pder.lock.Lock()
+	defer pder.lock.Unlock()
+
+	for {
+		element := pder.list.Back()
+		if element == nil {
+			break
+		}
+		if (element.Value.(*SessionStore).timeAccessed.Unix() + maxlifetime) < time.Now().Unix() {
+			pder.list.Remove(element)
+			delete(pder.sessions, element.Value.(*SessionStore).sid)
+		} else {
+			break
+		}
+	}
+}
+
+func (pder *ProviderImpl) SessionUpdate(sid string) error {
+	pder.lock.Lock()
+	defer pder.lock.Unlock()
+	if element, ok := pder.sessions[sid]; ok {
+		element.Value.(*SessionStore).timeAccessed = time.Now()
+		pder.list.MoveToFront(element)
+		return nil
+	}
+	return nil
+}
+
+///////////////////////////////////////////////////
+///////////////////////////////////////////////////
 
 func Register(name string, provider Provider) {
 	if provider == nil {
@@ -162,5 +271,7 @@ func decrypt(str string, key []byte) (string, error) {
 }
 
 func init() {
+	pder.sessions = make(map[string]*list.Element, 0)
+	Register("memory", pder)
 	globalSessions, _ = NewManager("memory", "gosessionid", 3600)
 }
