@@ -7,10 +7,9 @@ import (
 )
 
 type User struct {
-	Id    int
-	Name  string
-	Pwd   string
-	Token string
+	Id   int
+	Name string
+	Pwd  string
 }
 
 type UserDAO struct {
@@ -30,13 +29,14 @@ func (u *UserDAO) Save(user User) int {
 	stmt, err := db.Instance().Prepare("INSERT INTO userinfo(username,password,created) VALUES($1,$2,$3) RETURNING uid")
 	db.CheckErr(err)
 	hashpwd, err := encrypt(user.Pwd, KEY)
+	log.Println("============================")
 	if err != nil {
 		log.Println("error encrypt the password")
 		return -1
 	}
 	res, err := stmt.Exec(user.Name, hashpwd, time)
 	db.CheckErr(err)
-	id, err := res.LastInsertId()
+	id, err := res.RowsAffected()
 	db.CheckErr(err)
 	log.Println(id)
 	return int(id)

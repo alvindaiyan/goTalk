@@ -95,7 +95,6 @@ func sendMessage(app config.AppConfig, w http.ResponseWriter, r *http.Request) (
 		return http.StatusAccepted, nil
 	} else {
 		fmt.Println("method send:", r.Method) // get the http method
-
 		r.ParseForm()
 
 		// everytime need to ensure the user is an available user by checking
@@ -159,11 +158,10 @@ func login(app config.AppConfig, w http.ResponseWriter, r *http.Request) (int, e
 		//print out the form info
 		fmt.Println("username:", r.Form["username"])
 		// construct return json str
-		token, ok := model.PerformLogin(strings.Join(r.Form["username"], ""), strings.Join(r.Form["password"], ""))
+		ok := model.PerformLogin(w, r)
 		if ok {
 			var ur model.User
 			ur.Name = strings.Join(r.Form["username"], "")
-			ur.Token = token
 			uid, err := model.GetUserIdByName(ur.Name)
 			if err == nil {
 				ur.Id = uid
@@ -193,6 +191,27 @@ func getUserIdbyName(app config.AppConfig, w http.ResponseWriter, r *http.Reques
 	return http.StatusAccepted, nil
 }
 
+func register(app config.AppConfig, w http.ResponseWriter, r *http.Request) (int, error) {
+	fmt.Println("method get user id by name:", r.Method) // get the http method
+	if r.Method == "GET" {
+		t, _ := template.ParseFiles("tmpl/register.gtpl")
+		t.Execute(w, nil)
+		return http.StatusAccepted, nil
+	} else {
+		r.ParseForm()
+		//print out the form info
+		fmt.Println("username:", r.Form["username"])
+		// construct return json str
+		uname := strings.Join(r.Form["username"], "")
+		pwd := strings.Join(r.Form["password"], "")
+		userDao := model.NewUserDAO()
+		user := model.User{0, uname, pwd} // use a default value of 0 as id
+		userDao.Save(user)
+		toJsonResponse(user, w)
+		return http.StatusAccepted, nil
+	}
+}
+
 func toJsonResponse(v interface{}, w http.ResponseWriter) {
 	js, err := json.Marshal(v)
 	if err != nil {
@@ -220,7 +239,13 @@ func ServerSetup(appConfig config.AppConfig, port string) {
 
 	http.HandleFunc("/login", AppHandler{appConfig, login}.ServeHTTP)
 
+	fmt.Println("setup get user by name path")
+
 	http.HandleFunc("/getuseridbyname", AppHandler{appConfig, getUserIdbyName}.ServeHTTP)
+
+	fmt.Println("setup register path")
+
+	http.HandleFunc("/register", AppHandler{appConfig, register}.ServeHTTP)
 
 	// setup the lisenting port
 	err := http.ListenAndServe(":"+port, nil)

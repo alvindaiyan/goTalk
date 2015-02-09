@@ -11,6 +11,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 )
@@ -50,12 +51,6 @@ type Provider interface {
 	SessionGC(maxLifeTime int64)
 }
 
-type ProviderImpl struct {
-	lock     sync.Mutex               // locker
-	sessions map[string]*list.Element // save to memory
-	list     *list.List               // gc()
-}
-
 type Session interface {
 	Set(key, value interface{}) error //set session value
 	Get(key interface{}) interface{}  //get session value
@@ -63,10 +58,19 @@ type Session interface {
 	SessionID() string                //back current sessionID
 }
 
+/////////////////////////////////////////////////////////
+////////////////////// Session management ///////////////
+
 type SessionStore struct {
 	sid          string                      // session id rule
 	timeAccessed time.Time                   // last vist time
 	value        map[interface{}]interface{} // sesiion value
+}
+
+type ProviderImpl struct {
+	lock     sync.Mutex               // locker
+	sessions map[string]*list.Element // save to memory
+	list     *list.List               // gc()
 }
 
 func (st *SessionStore) Set(key, value interface{}) error {
@@ -95,8 +99,6 @@ func (st *SessionStore) SessionID() string {
 	return st.sid
 }
 
-/////////////////////////////////////////////////////////
-////////////////////// Session management ///////////////
 func (pder *ProviderImpl) SessionInit(sid string) (Session, error) {
 	pder.lock.Lock()
 	defer pder.lock.Unlock()
@@ -197,7 +199,6 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 		sid, _ := url.QueryUnescape(cookie.Value)
 		session, _ = manager.provider.SessionRead(sid)
 	}
-
 	return
 }
 
@@ -208,24 +209,33 @@ func login(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", 302)
 }
 
-func PerformLogin(uname string, pwd string) (string, bool) {
-	// this method is not finished
+func PerformLogin(w http.ResponseWriter, r *http.Request) bool {
+	// get user name and pwd
+	uname := strings.Join(r.Form["username"], "")
+	pwd := strings.Join(r.Form["password"], "")
+	// create a userDAO obj to check the password
 	userDao := NewUserDAO()
-	manager, _ := NewManager("providerName", "cookieName", 0)
+	// create a session manager for session management
+	// manager, _ := NewManager("providerName", "cookieName", 100000)
+	// get the user detail from the db
 	user := userDao.GetUserByName(uname)
+	// hash the pwd
 	hashpwd, err := decrypt(user.Pwd, KEY)
 	if err != nil {
-		return "", false
+		return false
 	}
 	if pwd == hashpwd {
-		token, err := manager.sessionId()
+		// successfully loged in
+		// token, err := manager.sessionId()
+		session := globalSessions.SessionStart(w, r)
+		session.Set("username", uname)
 		if err != nil {
-			return token, false
+			return false
 		} else {
-			return token, true
+			return true
 		}
 	} else {
-		return "wrong password", false
+		return false
 	}
 }
 
@@ -251,11 +261,14 @@ func encrypt(str string, key []byte) (string, error) {
 	}
 	cfb := cipher.NewCFBEncrypter(block, iv)
 	cfb.XORKeyStream(ciphertext[aes.BlockSize:], []byte(b))
-	return string(ciphertext[:]), nil
+	return base64.StdEncoding.EncodeToString(ciphertext[:]), nil
 }
 
 func decrypt(str string, key []byte) (string, error) {
-	text := []byte(str)
+	text, err := base64.StdEncoding.DecodeString(str)
+	if err != nil {
+		return "", err
+	}
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return "", err
