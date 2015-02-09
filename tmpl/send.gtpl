@@ -170,9 +170,6 @@
 <script type="text/javascript">
             // setup the login page
             var obj = new sync();
-
-
-
 </script>
 </body>
 </html>

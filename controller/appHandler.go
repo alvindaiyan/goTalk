@@ -212,15 +212,6 @@ func register(app config.AppConfig, w http.ResponseWriter, r *http.Request) (int
 	}
 }
 
-func toJsonResponse(v interface{}, w http.ResponseWriter) {
-	js, err := json.Marshal(v)
-	if err != nil {
-		log.Fatal("json parse err", err)
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(js)
-}
-
 func ServerSetup(appConfig config.AppConfig, port string) {
 	fmt.Println("start setup server:")
 	http.HandleFunc("/js/", func(w http.ResponseWriter, r *http.Request) {
@@ -258,7 +249,6 @@ func ServerSetup(appConfig config.AppConfig, port string) {
 // find the chanel for the user by the userid, if the chanel is not
 // exist, will create one and add to the map
 func findChan(app *config.AppConfig, uid int) chan model.Message {
-	// todo this is a adapter sub
 	if app.GetMsgcs()[uid] != nil {
 		return app.GetMsgcs()[uid]
 	}
@@ -266,4 +256,13 @@ func findChan(app *config.AppConfig, uid int) chan model.Message {
 	msgc := make(chan model.Message, config.MAX_CHAN)
 	app.SetMsgcs(uid, msgc)
 	return app.GetMsgcs()[uid]
+}
+
+func toJsonResponse(v interface{}, w http.ResponseWriter) {
+	js, err := json.Marshal(v)
+	if err != nil {
+		log.Fatal("json parse err", err)
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
 }
