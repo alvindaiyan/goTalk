@@ -1,6 +1,6 @@
 # goTalk
 A simple Go based IM system.
-The Project is based on Go 1.3.1 currently.
+The Project is based on [Go 1.3.1](http://golang.org/dl/) currently.
 
 ![Image of goTalk](https://github.com/alvindaiyan/goTalk/blob/master/config/goTalk.png)
 
