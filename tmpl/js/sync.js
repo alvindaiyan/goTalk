@@ -2,7 +2,21 @@ function sync(){
 	var self = this;
 	this.serviceUrl="/";
 	var  w;
+	var token = null;
 	
+	var getUrlParameter = function(sParam) {
+		var sPageURL = window.location.search.substring(1);
+		var sURLVariables = sPageURL.split('&');
+		for (var i = 0; i < sURLVariables.length; i++) 
+		{
+			var sParameterName = sURLVariables[i].split('=');
+			if (sParameterName[0] == sParam) 
+			{
+				return sParameterName[1];
+			}
+		}
+	} 
+
 
 	var startWorker = function() {
 		if(typeof(Worker) !== "undefined") {
@@ -41,7 +55,8 @@ function sync(){
 
 
 	$( document ).ready(function(){
-		var name = prompt("Please enter your name", "1234");
+		var name = getUrlParameter('username');
+		token = getUrlParameter('token');
 		var id = 0;
 		$.post('/getuseridbyname',
 			{username: name},
@@ -82,16 +97,16 @@ function sync(){
 			alert("no empty content -_-!!!")
 		} else{
 			$.post('/send', 
-				{
-					username: username,
-					id: id,
-					sendToId: sendToId,
-					content: content
-				}, function(data) {
-					console.log(JSON.stringify(data));
-					appendMsg("me (success)", content, false);
-					$("#chat").scrollTop($("#chat")[0].scrollHeight);
-				});
+			{
+				username: username,
+				id: id,
+				sendToId: sendToId,
+				content: content
+			}, function(data) {
+				console.log(JSON.stringify(data));
+				appendMsg("me (success)", content, false);
+				$("#chat").scrollTop($("#chat")[0].scrollHeight);
+			});
 		}
 		$("#enterTxt").val("");
 

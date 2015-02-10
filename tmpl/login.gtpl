@@ -10,27 +10,26 @@
 <title></title>
 </head>
 <body>
-<form action="/login" method="post">
-    user name:<input type="text" name="username">
-    password:<input type="text" name="password">
+  <div>
+    user name:<input type="text" name="username" id = "unameLogin">
+    password:<input type="text" name="password" id = "pwdLogin">
+    <!-- <button type="button" class="btn btn-primary btn-lg" onclick="obj.register()" value = "login"/> -->
+    <button type="button" data-loading-text="Loading..." class="btn btn-primary" autocomplete="off" onclick="obj.login()">
+      login
+    </button>
+    <!-- Button trigger modal -->
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModalRegister" onclick="obj.register()">
+      Register
+    </button>
+  </div>
+<!-- <form action="/login" method="post">
+    user name:<input type="text" name="username" id = "unameLogin">
+    password:<input type="text" name="password" id = "pwdLogin">
     <input type="submit" value="submit">    
 </form>
-
-<!-- <input class="btn btn-default" type="button" value="Register" onclick="obj.register()"/> -->
-<!-- <div id = "result">
-</div> -->
+ -->
 
 
-
-
-
-
-
-
-<!-- Button trigger modal -->
-<button type="button" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myModalRegister" onclick="obj.register()">
-  Register
-</button>
 
 <!-- Modal -->
 <div class="modal fade" id="myModalRegister" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">

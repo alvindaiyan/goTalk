@@ -3,7 +3,6 @@ package controller
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	config "github.com/config"
 	model "github.com/model/DAO"
 	util "github.com/util"
@@ -40,7 +39,7 @@ func (app AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
  * userid (receive user)
  */
 func syncMessages(app config.AppConfig, w http.ResponseWriter, r *http.Request) (int, error) {
-	fmt.Println("receive Message")
+	log.Println("receive Message")
 	if r.Method == "GET" {
 		t, _ := template.ParseFiles("tmpl/receive.gtpl")
 		t.Execute(w, nil)
@@ -50,12 +49,12 @@ func syncMessages(app config.AppConfig, w http.ResponseWriter, r *http.Request) 
 
 		if model.ValidateToken(r.FormValue("token")) {
 			// print the info to the server console
-			fmt.Println(r.Form)
-			fmt.Println("path", r.URL.Path)
-			fmt.Println("scheme", r.URL.Scheme)
-			fmt.Println(r.Form["url_long"])
+			log.Println(r.Form)
+			log.Println("path", r.URL.Path)
+			log.Println("scheme", r.URL.Scheme)
+			log.Println(r.Form["url_long"])
 
-			fmt.Println("looking for message for userid: ", r.Form["id"])
+			log.Println("looking for message for userid: ", r.Form["id"])
 
 			// accroding to the user id find his chan
 			userId64, err := strconv.ParseInt(r.FormValue("id"), 0, 0)
@@ -63,7 +62,7 @@ func syncMessages(app config.AppConfig, w http.ResponseWriter, r *http.Request) 
 				log.Println("parse user id err", err)
 			} else {
 				c := findChan(&app, int(userId64))
-				fmt.Println("channel length", len(c))
+				log.Println("channel length", len(c))
 				if c != nil && len(c) > 0 {
 					var msgs []model.Message
 					count := len(c)
@@ -94,28 +93,28 @@ func sendMessage(app config.AppConfig, w http.ResponseWriter, r *http.Request) (
 		t.Execute(w, nil)
 		return http.StatusAccepted, nil
 	} else {
-		fmt.Println("method send:", r.Method) // get the http method
+		log.Println("method send:", r.Method) // get the http method
 		r.ParseForm()
 
 		// everytime need to ensure the user is an available user by checking
 		// the token of the user
 		if model.ValidateToken(strings.Join(r.Form["token"], "")) {
-			fmt.Println("user loged in: ", r.Form["username"])
+			log.Println("user loged in: ", r.Form["username"])
 
 			// print the info to the server console
-			fmt.Println(r.Form)
-			fmt.Println("path", r.URL.Path)
-			fmt.Println("scheme", r.URL.Scheme)
-			fmt.Println(r.Form["url_long"])
+			log.Println(r.Form)
+			log.Println("path", r.URL.Path)
+			log.Println("scheme", r.URL.Scheme)
+			log.Println(r.Form["url_long"])
 
-			fmt.Println("username:", r.Form["username"])
-			fmt.Println("user id:", r.Form["id"])
-			fmt.Println("userid sendTo:", r.Form["sendToId"])
-			fmt.Println("content:", r.Form["content"])
+			log.Println("username:", r.Form["username"])
+			log.Println("user id:", r.Form["id"])
+			log.Println("userid sendTo:", r.Form["sendToId"])
+			log.Println("content:", r.Form["content"])
 
 			for k, v := range r.Form {
-				fmt.Println("key:", k)
-				fmt.Println("val:", strings.Join(v, ""))
+				log.Println("key:", k)
+				log.Println("val:", strings.Join(v, ""))
 			}
 
 			// construct a new message
@@ -137,7 +136,7 @@ func sendMessage(app config.AppConfig, w http.ResponseWriter, r *http.Request) (
 			c := findChan(&app, int(sendToId64))
 			go model.Addmsg(msg, c)
 
-			fmt.Println("message sent", len(findChan(&app, 0)))
+			log.Println("message sent", len(findChan(&app, 0)))
 			toJsonResponse("message received", w)
 			return http.StatusAccepted, nil
 		} else {
@@ -148,7 +147,7 @@ func sendMessage(app config.AppConfig, w http.ResponseWriter, r *http.Request) (
 }
 
 func login(app config.AppConfig, w http.ResponseWriter, r *http.Request) (int, error) {
-	fmt.Println("method login:", r.Method) // get the http method
+	log.Println("method login:", r.Method) // get the http method
 	if r.Method == "GET" {
 		t, _ := template.ParseFiles("tmpl/login.gtpl")
 		t.Execute(w, nil)
@@ -156,15 +155,16 @@ func login(app config.AppConfig, w http.ResponseWriter, r *http.Request) (int, e
 	} else {
 		r.ParseForm()
 		//print out the form info
-		fmt.Println("username:", r.Form["username"])
+		log.Println("username:", r.Form["username"])
 		// construct return json str
-		ok := model.PerformLogin(w, r)
+		sessionid, ok := model.PerformLogin(w, r)
 		if ok {
 			var ur model.User
 			ur.Name = strings.Join(r.Form["username"], "")
 			uid, err := model.GetUserIdByName(ur.Name)
 			if err == nil {
 				ur.Id = uid
+				ur.SessionID = sessionid
 				toJsonResponse(ur, w)
 				return http.StatusAccepted, nil
 			} else {
@@ -179,10 +179,10 @@ func login(app config.AppConfig, w http.ResponseWriter, r *http.Request) (int, e
 }
 
 func getUserIdbyName(app config.AppConfig, w http.ResponseWriter, r *http.Request) (int, error) {
-	fmt.Println("method get user id by name:", r.Method) // get the http method
+	log.Println("method get user id by name:", r.Method) // get the http method
 	r.ParseForm()
 	//print out the form info
-	fmt.Println("username:", r.Form["username"])
+	log.Println("username:", r.Form["username"])
 	// construct return json str
 	uname := strings.Join(r.Form["username"], "")
 	userDao := model.NewUserDAO()
@@ -192,7 +192,7 @@ func getUserIdbyName(app config.AppConfig, w http.ResponseWriter, r *http.Reques
 }
 
 func register(app config.AppConfig, w http.ResponseWriter, r *http.Request) (int, error) {
-	fmt.Println("method get user id by name:", r.Method) // get the http method
+	log.Println("method get user id by name:", r.Method) // get the http method
 	if r.Method == "GET" {
 		t, _ := template.ParseFiles("tmpl/register.gtpl")
 		t.Execute(w, nil)
@@ -200,12 +200,12 @@ func register(app config.AppConfig, w http.ResponseWriter, r *http.Request) (int
 	} else {
 		r.ParseForm()
 		//print out the form info
-		fmt.Println("username:", r.Form["username"])
+		log.Println("username:", r.Form["username"])
 		// construct return json str
 		uname := strings.Join(r.Form["username"], "")
 		pwd := strings.Join(r.Form["password"], "")
 		userDao := model.NewUserDAO()
-		user := model.User{0, uname, pwd} // use a default value of 0 as id
+		user := model.User{0, uname, pwd, ""} // use a default value of 0 as id
 		userDao.Save(user)
 		toJsonResponse(user, w)
 		return http.StatusAccepted, nil
@@ -213,28 +213,28 @@ func register(app config.AppConfig, w http.ResponseWriter, r *http.Request) (int
 }
 
 func ServerSetup(appConfig config.AppConfig, port string) {
-	fmt.Println("start setup server:")
+	log.Println("start setup server:")
 	http.HandleFunc("/js/", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "tmpl/"+r.URL.Path[1:])
 	})
 
-	fmt.Println("setup send path (/send)")
+	log.Println("setup send path (/send)")
 
 	http.HandleFunc("/send", AppHandler{appConfig, sendMessage}.ServeHTTP)
 
-	fmt.Println("setup sync path")
+	log.Println("setup sync path")
 
 	http.HandleFunc("/sync", AppHandler{appConfig, syncMessages}.ServeHTTP)
 
-	fmt.Println("setup login path")
+	log.Println("setup login path")
 
 	http.HandleFunc("/login", AppHandler{appConfig, login}.ServeHTTP)
 
-	fmt.Println("setup get user by name path")
+	log.Println("setup get user by name path")
 
 	http.HandleFunc("/getuseridbyname", AppHandler{appConfig, getUserIdbyName}.ServeHTTP)
 
-	fmt.Println("setup register path")
+	log.Println("setup register path")
 
 	http.HandleFunc("/register", AppHandler{appConfig, register}.ServeHTTP)
 

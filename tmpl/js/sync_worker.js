@@ -6,7 +6,7 @@ onmessage = function(e) {
   console.log('Message received from main script');
   var workerResult = 'Result: ' + (e.data);
   console.log('Posting message back to main script: ' + workerResult);
-  userid = e.data;
+  userid = e.data;  
 }
 
 // data ||| total sync count ||| msg recevied

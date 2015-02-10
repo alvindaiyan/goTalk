@@ -7,9 +7,10 @@ import (
 )
 
 type User struct {
-	Id   int
-	Name string
-	Pwd  string
+	Id        int
+	Name      string
+	Pwd       string
+	SessionID string
 }
 
 type UserDAO struct {

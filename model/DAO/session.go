@@ -193,8 +193,8 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 			fmt.Errorf("cannot get sid")
 		}
 		session, _ = manager.provider.SessionInit(sid)
-		cookie := http.Cookie{Name: manager.cookieName, Value: url.QueryEscape(sid), Path: "/", HttpOnly: true, MaxAge: int(manager.maxlifetime)}
-		http.SetCookie(w, &cookie)
+		// cookie := http.Cookie{Name: manager.cookieName, Value: url.QueryEscape(sid), Path: "/", HttpOnly: true, MaxAge: int(manager.maxlifetime)}
+		// http.SetCookie(w, &cookie)
 	} else {
 		sid, _ := url.QueryUnescape(cookie.Value)
 		session, _ = manager.provider.SessionRead(sid)
@@ -202,14 +202,7 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 	return
 }
 
-func login(w http.ResponseWriter, r *http.Request) {
-	session := globalSessions.SessionStart(w, r)
-	r.ParseForm()
-	session.Set("username", r.Form["username"])
-	http.Redirect(w, r, "/", 302)
-}
-
-func PerformLogin(w http.ResponseWriter, r *http.Request) bool {
+func PerformLogin(w http.ResponseWriter, r *http.Request) (string, bool) {
 	// get user name and pwd
 	uname := strings.Join(r.Form["username"], "")
 	pwd := strings.Join(r.Form["password"], "")
@@ -222,7 +215,7 @@ func PerformLogin(w http.ResponseWriter, r *http.Request) bool {
 	// hash the pwd
 	hashpwd, err := decrypt(user.Pwd, KEY)
 	if err != nil {
-		return false
+		return "", false
 	}
 	if pwd == hashpwd {
 		// successfully loged in
@@ -230,12 +223,12 @@ func PerformLogin(w http.ResponseWriter, r *http.Request) bool {
 		session := globalSessions.SessionStart(w, r)
 		session.Set("username", uname)
 		if err != nil {
-			return false
+			return "", false
 		} else {
-			return true
+			return session.SessionID(), true
 		}
 	} else {
-		return false
+		return "", false
 	}
 }
 
