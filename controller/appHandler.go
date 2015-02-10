@@ -34,6 +34,49 @@ func (app AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func ServerSetup(appConfig config.AppConfig, port string) {
+	log.Println("start setup server:")
+
+	log.Println("setup home page redirect (/)")
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
+	})
+
+	log.Println("setup library handler (/js/)")
+
+	http.HandleFunc("/js/", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "tmpl/"+r.URL.Path[1:])
+	})
+
+	log.Println("setup send path (/send)")
+
+	http.HandleFunc("/send", AppHandler{appConfig, sendMessage}.ServeHTTP)
+
+	log.Println("setup sync path (/sync)")
+
+	http.HandleFunc("/sync", AppHandler{appConfig, syncMessages}.ServeHTTP)
+
+	log.Println("setup login path (/login)")
+
+	http.HandleFunc("/login", AppHandler{appConfig, login}.ServeHTTP)
+
+	log.Println("setup get user by name path (/getuseridbyname)")
+
+	http.HandleFunc("/getuseridbyname", AppHandler{appConfig, getUserIdbyName}.ServeHTTP)
+
+	log.Println("setup register path (/register)")
+
+	http.HandleFunc("/register", AppHandler{appConfig, register}.ServeHTTP)
+
+	// setup the lisenting port
+	err := http.ListenAndServe(":"+port, nil)
+	if err != nil {
+		log.Fatal("ListenAndServe err: ", err)
+		os.Exit(1)
+	}
+}
+
 /*
  * parameter needed:
  * userid (receive user)
@@ -209,49 +252,6 @@ func register(app config.AppConfig, w http.ResponseWriter, r *http.Request) (int
 		userDao.Save(user)
 		toJsonResponse(user, w)
 		return http.StatusAccepted, nil
-	}
-}
-
-func ServerSetup(appConfig config.AppConfig, port string) {
-	log.Println("start setup server:")
-
-	log.Println("setup home page redirect")
-
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
-	})
-
-	log.Println("setup library handler")
-
-	http.HandleFunc("/js/", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "tmpl/"+r.URL.Path[1:])
-	})
-
-	log.Println("setup send path (/send)")
-
-	http.HandleFunc("/send", AppHandler{appConfig, sendMessage}.ServeHTTP)
-
-	log.Println("setup sync path")
-
-	http.HandleFunc("/sync", AppHandler{appConfig, syncMessages}.ServeHTTP)
-
-	log.Println("setup login path")
-
-	http.HandleFunc("/login", AppHandler{appConfig, login}.ServeHTTP)
-
-	log.Println("setup get user by name path")
-
-	http.HandleFunc("/getuseridbyname", AppHandler{appConfig, getUserIdbyName}.ServeHTTP)
-
-	log.Println("setup register path")
-
-	http.HandleFunc("/register", AppHandler{appConfig, register}.ServeHTTP)
-
-	// setup the lisenting port
-	err := http.ListenAndServe(":"+port, nil)
-	if err != nil {
-		log.Fatal("ListenAndServe err: ", err)
-		os.Exit(1)
 	}
 }
 

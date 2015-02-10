@@ -1,6 +1,6 @@
 <html>
 <head>
-    <title></title>
+    <title>goTalk</title>
 
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <!-- Latest compiled and minified CSS -->
