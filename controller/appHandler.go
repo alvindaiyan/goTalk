@@ -214,6 +214,15 @@ func register(app config.AppConfig, w http.ResponseWriter, r *http.Request) (int
 
 func ServerSetup(appConfig config.AppConfig, port string) {
 	log.Println("start setup server:")
+
+	log.Println("setup home page redirect")
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
+	})
+
+	log.Println("setup library handler")
+
 	http.HandleFunc("/js/", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "tmpl/"+r.URL.Path[1:])
 	})
