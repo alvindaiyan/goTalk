@@ -69,6 +69,10 @@ func ServerSetup(appConfig config.AppConfig, port string) {
 
 	http.HandleFunc("/register", AppHandler{appConfig, register}.ServeHTTP)
 
+	log.Println("setup addfriend path (/addfriend)")
+
+	http.HandleFunc("/addfriend", AppHandler{appConfig, addfriendRequest}.ServeHTTP)
+
 	// setup the lisenting port
 	err := http.ListenAndServe(":"+port, nil)
 	if err != nil {
@@ -177,7 +181,7 @@ func sendMessage(app config.AppConfig, w http.ResponseWriter, r *http.Request) (
 			// get the chan based on the sendToId
 			// add the msg to the channel
 			c := findChan(&app, int(sendToId64))
-			go model.Addmsg(msg, c)
+			go addmsg(msg, c)
 
 			log.Println("message sent", len(findChan(&app, 0)))
 			toJsonResponse("message received", w)
@@ -234,6 +238,26 @@ func getUserIdbyName(app config.AppConfig, w http.ResponseWriter, r *http.Reques
 	return http.StatusAccepted, nil
 }
 
+// input:
+// host user id: id
+// link user id: friendid
+func addfriendRequest(app config.AppConfig, w http.ResponseWriter, r *http.Request) (int, error) {
+	log.Println("method addfriend:", r.Method) // get the http method
+	r.ParseForm()
+	//print out the form info
+	log.Println("friend:", r.Form["friendid"])
+	log.Println("user id:", r.Form["id"])
+
+	// todo: add useruserlink
+
+	// // construct return json str
+	// uname := strings.Join(r.Form["username"], "")
+	// userDao := model.NewUserDAO()
+	// user := userDao.GetUserByName(uname)
+	// toJsonResponse(user, w)
+	return http.StatusAccepted, nil
+}
+
 func register(app config.AppConfig, w http.ResponseWriter, r *http.Request) (int, error) {
 	log.Println("method get user id by name:", r.Method) // get the http method
 	if r.Method == "GET" {
@@ -253,6 +277,11 @@ func register(app config.AppConfig, w http.ResponseWriter, r *http.Request) (int
 		toJsonResponse(user, w)
 		return http.StatusAccepted, nil
 	}
+}
+
+func addmsg(a model.Message, c chan model.Message) {
+	// todo this is a adapter sub
+	c <- a
 }
 
 // find the chanel for the user by the userid, if the chanel is not
