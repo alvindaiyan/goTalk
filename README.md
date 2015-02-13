@@ -15,6 +15,8 @@ The login services is not implemented yet.
 
 Currently, the project has not connect to any database but will in the future.
 
+> Problem: need do a sh file for compile project and run (a easy way to run)!
+
 # The Software Architecture
 ![Image of goTalk arch](https://github.com/alvindaiyan/goTalk/blob/master/config/goTalk Arch v0.png)
 The user can has two role in this simple IM system. One is the sender, and one is the receiver. Each user has a [channel](https://golang.org/doc/effective_go.html#concurrency) to store message. 
