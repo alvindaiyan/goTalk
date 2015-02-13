@@ -5,7 +5,7 @@ The Project is based on [Go 1.3.1](http://golang.org/dl/) currently.
 ![Image of goTalk](https://github.com/alvindaiyan/goTalk/blob/master/config/goTalk.png)
 
 # To Run
-1. Install Golang to your computer,
+1. [Install Golang](https://golang.org/doc/install) to your computer,
 2. Checkout the project,
 3. Go to the project folder and run `go run imServer.go` to start the server.
 
