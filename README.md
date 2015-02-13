@@ -15,7 +15,7 @@ The login services is not implemented yet.
 
 Currently, the project has not connect to any database but will in the future.
 
-> Problem: need do a sh file for compile project and run (a easy way to run)!
+> Notice: need do a sh file for compile project and run (a easy way to run)!
 
 # The Software Architecture
 ![Image of goTalk arch](https://github.com/alvindaiyan/goTalk/blob/master/config/goTalk Arch v0.png)
