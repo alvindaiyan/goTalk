@@ -9,7 +9,7 @@ The Project is based on [Go 1.3.1](http://golang.org/dl/) currently.
 2. Checkout the project,
 3. Go to the project folder and run `go run imServer.go` to start the server.
 
-The default port is 9000 (entry: localhost:9000/), can be changed in imServer.go.
+The default port is 9000 (e.g. entry: localhost:9000/), can be changed in imServer.go.
 
 The login services is not implemented yet.
 
