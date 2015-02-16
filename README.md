@@ -19,7 +19,7 @@ Currently, the project has not connect to any database but will in the future.
 
 # The Software Architecture
 ![Image of goTalk arch](https://github.com/alvindaiyan/goTalk/blob/master/config/goTalk Arch v0.png)
-The user can has two role in this simple IM system. One is the sender, and one is the receiver. Each user has a [channel](https://golang.org/doc/effective_go.html#concurrency) to store message. 
+The user can has two role in this simple IM system. One is the sender, and one is the receiver. Each user has a [channel](https://golang.org/doc/effective_go.html#concurrency) to store message. goTalk is designed to obtain the http transfer standard. 
 
 ## The Message Sending Process
 
