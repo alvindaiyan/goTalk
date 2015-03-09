@@ -73,6 +73,10 @@ func ServerSetup(appConfig config.AppConfig, port string) {
 
 	http.HandleFunc("/addfriend", AppHandler{appConfig, addfriendRequest}.ServeHTTP)
 
+	log.Println("setup addfriend path (/friendlist)")
+
+	http.HandleFunc("/friendlist", AppHandler{appConfig, friendList}.ServeHTTP)
+
 	// setup the lisenting port
 	err := http.ListenAndServe(":"+port, nil)
 	if err != nil {
@@ -248,13 +252,39 @@ func addfriendRequest(app config.AppConfig, w http.ResponseWriter, r *http.Reque
 	log.Println("friend:", r.Form["friendid"])
 	log.Println("user id:", r.Form["id"])
 
-	// todo: add useruserlink
+	user1Id64, err := strconv.ParseInt(r.FormValue("id"), 0, 0)
+	if err != nil {
+		return http.StatusBadRequest, nil
+	}
+	user2Id64, err := strconv.ParseInt(r.FormValue("friendid"), 0, 0)
+	if err != nil {
+		return http.StatusBadRequest, nil
+	}
+	uul := model.UserUserLink{-1, int(user1Id64), int(user2Id64)}
+	useruserlinkdao := model.NewUserUserLinkDAO()
+	useruserlinkdao.Save(uul)
+	toJsonResponse(uul, w)
+	return http.StatusAccepted, nil
+}
 
-	// // construct return json str
-	// uname := strings.Join(r.Form["username"], "")
-	// userDao := model.NewUserDAO()
-	// user := userDao.GetUserByName(uname)
-	// toJsonResponse(user, w)
+// input:
+// host user id: id
+func friendList(app config.AppConfig, w http.ResponseWriter, r *http.Request) (int, error) {
+	log.Println("method addfriend:", r.Method) // get the http method
+	r.ParseForm()
+	//print out the form info
+	log.Println("user id:", r.Form["id"])
+
+	id64, err := strconv.ParseInt(r.FormValue("id"), 0, 0)
+	if err != nil {
+		return http.StatusBadRequest, nil
+	}
+	useruserlinkdao := model.NewUserUserLinkDAO()
+	ids, err := useruserlinkdao.GetAll(int(id64))
+	if err != nil {
+		return http.StatusBadRequest, nil
+	}
+	toJsonResponse(ids, w)
 	return http.StatusAccepted, nil
 }
 

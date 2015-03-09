@@ -30,7 +30,6 @@ func (u *UserDAO) Save(user User) int {
 	stmt, err := db.Instance().Prepare("INSERT INTO userinfo(username,password,created) VALUES($1,$2,$3) RETURNING uid")
 	db.CheckErr(err)
 	hashpwd, err := encrypt(user.Pwd, KEY)
-	log.Println("============================")
 	if err != nil {
 		log.Println("error encrypt the password")
 		return -1
