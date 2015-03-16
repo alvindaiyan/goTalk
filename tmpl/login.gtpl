@@ -12,7 +12,7 @@
 <body>
   <div>
     user name:<input type="text" name="username" id = "unameLogin">
-    password:<input type="text" name="password" id = "pwdLogin">
+    password:<input type="password" name="password" id = "pwdLogin">
     <!-- <button type="button" class="btn btn-primary btn-lg" onclick="obj.register()" value = "login"/> -->
     <button type="button" data-loading-text="Loading..." class="btn btn-primary" autocomplete="off" onclick="obj.login()">
       login
