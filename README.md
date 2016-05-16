@@ -47,5 +47,3 @@ There is a map to store all the message channel and indexed by the user id. When
 ## Security (Not Decide yet)
 
 Currently, using AES256.
-
-[slack](https://hooks.slack.com/services/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)
